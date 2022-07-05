@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
-import { StorageService } from './storage.service';
+import { storageConfig, StorageService } from './storage.service';
+import { TypeOrmModule} from '@nestjs/typeorm'
 
 @Module({
-  controllers: [],
-  providers: [StorageService]
+  providers: [StorageService],
+  imports: [
+    TypeOrmModule.forRoot(storageConfig)
+  ]
 })
 export class StorageModule {}
