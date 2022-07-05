@@ -1,5 +1,6 @@
 
-import { Entity, Column, PrimaryGeneratedColumn , PrimaryColumn, JoinColumn, OneToOne, OneToMany, ManyToOne, ManyToMany } from 'typeorm'
+import { Entity, Column, PrimaryGeneratedColumn , JoinTable, PrimaryColumn, JoinColumn, OneToOne, OneToMany, ManyToOne, ManyToMany } from 'typeorm'
+import { Department } from './department.entity'
 
 
 @Entity({
@@ -21,6 +22,10 @@ export class User {
 
   @Column({ name: 'notes', type: 'varchar', length: 64 })
   notes: string
+
+  @ManyToMany(() => Department, (department)=> department.users)
+  @JoinTable({ name: 'department_user' })
+  departments: Department[]
 }
 
 

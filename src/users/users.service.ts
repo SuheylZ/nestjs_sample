@@ -45,8 +45,8 @@ export class UsersService {
   }
 
   async findOne(id: number) {
-
-   const ret = await this._users.findOne({
+    const ret = await this._users.findOne({
+      relations:["department"],
       where: {
         userid: id,
       }
@@ -60,5 +60,10 @@ export class UsersService {
 
   async remove(id: number) {
     return Promise.resolve()
+  }
+
+  async getuserDepartments(id: number) {
+    const user = await this.findOne(id)
+    return user.departments
   }
 }

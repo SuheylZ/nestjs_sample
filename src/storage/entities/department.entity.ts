@@ -15,8 +15,7 @@ export class Department {
   @Column({type:'text'})
   notes: string
 
-  @ManyToMany(() => User)
+  @ManyToMany(() => User, (user)=> user.departments)
   @JoinTable({name: 'department_user'})
-  users: User[]
-  
+  users: User[]  
 }

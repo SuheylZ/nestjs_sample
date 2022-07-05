@@ -31,4 +31,14 @@ export class DepartmentController {
   remove(@Param('id') id: string) {
     return this.departmentService.remove(+id);
   }
+
+  @Post(':deptid/Users/:userid')
+  async enroll(@Param('deptid') deptid: number, @Param('userid') userid: number) {
+    await this.departmentService.enroll(+userid, +deptid)
+  }
+
+  @Delete(':deptid/Users/:userid')
+  async unroll(@Param('deptid') deptid: number, @Param('userid') userid: number) {
+    await this.departmentService.unroll(+userid, +deptid)
+  }
 }

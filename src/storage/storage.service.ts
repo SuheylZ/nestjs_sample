@@ -17,6 +17,4 @@ export const storageConfig: TypeOrmModuleOptions = {
 
 
 @Injectable()
-export class StorageService {
-
-}
+export class StorageService {}
