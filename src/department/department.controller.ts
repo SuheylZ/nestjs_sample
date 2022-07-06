@@ -18,8 +18,8 @@ export class DepartmentController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.departmentService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.departmentService.findOne(id);
   }
 
   @Patch(':id')
@@ -28,8 +28,8 @@ export class DepartmentController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.departmentService.remove(+id);
+  remove(@Param('id') id: number) {
+    return this.departmentService.remove(id);
   }
 
   @Post(':deptid/Users/:userid')
@@ -40,5 +40,18 @@ export class DepartmentController {
   @Delete(':deptid/Users/:userid')
   async unroll(@Param('deptid') deptid: number, @Param('userid') userid: number) {
     await this.departmentService.unroll(+userid, +deptid)
+  }
+
+  @Get(':deptid/users')
+  async people(@Param('deptid') deptid: number) {
+    const dept = await this.departmentService.findOne(deptid)
+    const users = (dept.users ?? []).map(x => {
+      return {
+        id: x.userid,
+        name: x.name,
+        age: x.age
+      }
+    })
+    return users
   }
 }

@@ -46,7 +46,7 @@ export class UsersService {
 
   async findOne(id: number) {
     const ret = await this._users.findOne({
-      relations:["department"],
+      relations:["departments"],
       where: {
         userid: id,
       }
@@ -65,5 +65,16 @@ export class UsersService {
   async getuserDepartments(id: number) {
     const user = await this.findOne(id)
     return user.departments
+  }
+
+  async exists(id: number) {
+    const data = await this._users.findOne({
+      select: ["userid"],
+      where: {
+        userid: id
+      }
+    })
+
+    return !!data
   }
 }

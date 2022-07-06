@@ -1,20 +1,18 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Department } from 'src/storage/entities/department.entity';
-import { User } from 'src/storage/entities/user.entity';
 import { DataSource, Repository} from 'typeorm'
 import { DepartmentRequest, DepartmentResponse } from './department.models';
 import _ from 'underscore'
+import { UsersService } from 'src/users/users.service';
 
 
 @Injectable()
 export class DepartmentService {
   private readonly _depts: Repository<Department>
-  private readonly _users : Repository<User>
 
 
-  constructor(private readonly ds: DataSource) {
+  constructor(private readonly ds: DataSource, private readonly users: UsersService) {
     this._depts = ds.getRepository(Department)
-    this._users = ds.getRepository(User)
   }
   async create(req: DepartmentRequest) {
     const depts = this._depts
@@ -89,47 +87,31 @@ export class DepartmentService {
   }
 
   async enroll(userid: number, deptid: number) {
-    const department = await this.findOne(deptid)
-    
-    const user = await this._users.findOne({
-      relations: ['departments'],
-      where: {
-        userid: userid
-      }
-    })
-
+    const department = await this.findOne(deptid)    
+    const user = await this.users.findOne(userid)
     if (!user)
       throw new NotFoundException(`User ${userid} not found`)
     
-    if (user.departments)
-      user.departments.push(department)
-    else
-      user.departments = [department]
+    if (!department.users)
+      department.users = [user]
+    else if (!_.any(department.users, x => x.userid === userid))
+      department.users.push(user)
+    else 
+      throw new HttpException(`User ${userid} already part of the department ${deptid}`, HttpStatus.CONFLICT)
     
-    await this._users.save(user)
+    await this._depts.save(department)
   }
 
   async unroll(userid: number, deptid: number) {
-    const record = await this._depts.findOne({
-      where: {
-        departmentid: deptid
-      }
-    })
-
-    if (!record)
+    const department = await this.findOne(deptid)
+    if (!department)
       throw new NotFoundException(`Department ${deptid} not found`)
     
-    const user = await this._users.findOne({
-      where: {
-        userid: userid
-      }
-    })
-
-    if (!user)
-      throw new NotFoundException(`User ${userid} not found`)
+    if (!_.any(department.users??[], x=>x.userid===userid))
+      throw new NotFoundException(`User ${userid} not found in department`)
     
-    user.departments = user.departments.filter(x => x.departmentid !== deptid)
+    department.users = department.users.filter(x => x.userid !== deptid)
     
-    await this._users.save(user)
+    await this._depts.save(department)
   }
 }
