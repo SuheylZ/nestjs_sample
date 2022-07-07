@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserResponse, UserRequest } from './user.models';
 
@@ -30,4 +30,5 @@ export class UsersController {
   async remove(@Param('id') id: string) {
     await this.usersService.remove(+id);
   }
+
 }

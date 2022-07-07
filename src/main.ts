@@ -16,12 +16,15 @@ async function bootstrap() {
     .setTitle("Documentation")
     .setDescription("Gives the EndPoints overview")
     .setVersion("1.0")
-    .setBasePath(docs_path)
     .build()
-  
+ 
   const doc = SwaggerModule.createDocument(app, swaggerconfig)
   SwaggerModule.setup(docs_path, app, doc)
 
-  await app.listen(port);
+  await app.listen(port, async () => {
+    const imp = app.get(ImporterService)
+    await imp.load('/home/suheyl/Downloads/iso_639-1.csv')
+  });
+
 }
 bootstrap();
