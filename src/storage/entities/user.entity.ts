@@ -24,7 +24,18 @@ export class User {
   notes: string
 
   @ManyToMany(() => Department, (department)=> department.users)
-  @JoinTable({ name: 'department_user' })
+  @JoinTable({ 
+    name: 'department_user',
+    joinColumn: {
+      name: 'userid',
+      foreignKeyConstraintName: 'fk_dept_user'
+    },
+    inverseJoinColumn: {
+      referencedColumnName: 'departmentid',
+      name: 'departmentid',
+      foreignKeyConstraintName: 'fk_dept_dept'
+    }
+  })
   departments: Department[]
 }
 
