@@ -22,8 +22,8 @@ async function bootstrap() {
   SwaggerModule.setup(docs_path, app, doc)
 
   await app.listen(port, async () => {
-    const imp = app.get(ImporterService)
-    await imp.load('/home/suheyl/Downloads/iso_639-1.csv')
+    // const imp = app.get(ImporterService)
+    // await imp.load('/home/suheyl/Downloads/iso_639-1.csv')
   });
 
 }
