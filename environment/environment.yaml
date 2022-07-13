@@ -1,17 +1,30 @@
 version: "3.1"
 services:
   postgres:
-      image: postgres:bullseye
-      volumes:
-        - /data/postgres:/var/lib/postgresql/data
-      environment:
-        - POSTGRES_USER="admin"
-        - POSTGRES_PASSWORD="password"
-      networks:
-        mynet:
-          ipv4_address: "172.19.0.8"
-      ports:
-        - 5432:5432
+    image: postgres:bullseye
+    volumes:
+      - /data/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER="admin"
+      - POSTGRES_PASSWORD="password"
+    networks:
+      mynet:
+        ipv4_address: "172.19.0.8"
+    ports:
+      - 5432:5432
+
+  pdadmin:
+    image: dpage/pgadmin4:6.11
+    networks:
+      mynet:
+        ipv4_address: "172.19.0.9"
+    ports:
+      - 5050:80 
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=name@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+
+
   zero:
       image: dgraph/dgraph:v21.03.1
       volumes:

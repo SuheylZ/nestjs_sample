@@ -30,13 +30,15 @@
     "@types/multer": "^1.4.7",
     "csv-parser": "^3.0.0",
     "dotenv": "^16.0.1",
+    "nest-winston": "^1.7.0",
     "pg": "^8.7.3",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "swagger-ui-express": "^4.4.0",
     "typeorm": "^0.3.7",
-    "underscore": "^1.13.4"
+    "underscore": "^1.13.4",
+    "winston": "^3.8.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.0",

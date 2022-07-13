@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserRequest, UserResponse } from './user.models';
 import {DataSource, Repository, FindManyOptions } from 'typeorm'
 import { User } from 'src/storage/entities/user.entity';
@@ -64,6 +64,9 @@ export class UsersService {
 
   async getuserDepartments(id: number) {
     const user = await this.findOne(id)
+    if (!user)
+      throw new NotFoundException('Could not find any department')
+    
     return user.departments
   }
 
