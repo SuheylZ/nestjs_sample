@@ -1,0 +1,95 @@
+version: "3.1"
+services:
+  postgres:
+      image: postgres:bullseye
+      volumes:
+        - /data/postgres:/var/lib/postgresql/data
+      environment:
+        - POSTGRES_USER="admin"
+        - POSTGRES_PASSWORD="password"
+      networks:
+        mynet:
+          ipv4_address: "172.19.0.8"
+      ports:
+        - 5432:5432
+  zero:
+      image: dgraph/dgraph:v21.03.1
+      volumes:
+        - /data/dgraph/zero:/dgraph
+      networks:
+        mynet:
+          ipv4_address: "172.19.0.10"
+      ports:
+        - 5080:5080
+        - 6080:6080
+      restart: on-failure
+      command: "dgraph zero --my=zero:5080"
+
+  alpha:
+    image: dgraph/dgraph:v21.03.1
+    volumes:
+      - /data/dgraph/alpha:/dgraph
+    networks: 
+      mynet:
+        ipv4_address: "172.19.0.11"
+    ports:
+      - 8080:8080
+      - 9080:9080
+    restart: on-failure
+    command: dgraph alpha --my=alpha:7080 --zero=zero:5080 --whitelist 172.19.0.10,172.19.0.12,192.168.1.1
+  
+  ratel:
+    image: dgraph/ratel:latest
+    networks: 
+      mynet:
+        ipv4_address: "172.19.0.12"
+    ports:
+      - 8000:8000
+    command: dgraph-ratel
+
+  mongo: 
+    image: mongo:focal
+    networks: 
+      mynet:
+        ipv4_address: "172.19.0.15"
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME="root"
+      - MONGO_INITDB_ROOT_PASSWORD="mongo#123"
+    command: mongod --verbose --dbpath=/data/db
+    volumes:
+    - /tmp/data/mongo:/data/db
+
+  mongo-admin:
+    image: mongo-express:0.54.0
+    networks: 
+      mynet:
+        ipv4_address: "172.19.0.16"
+    ports:
+      - 8081:8081
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME="root"
+      - ME_CONFIG_MONGODB_ADMINPASSWORD="mongo#123"
+      - ME_CONFIG_MONGODB_URL="mongodb://root:mongo#123@mongo:27017/"
+
+
+  portainer:
+    image: portainer/portainer-ce:2.13.1
+    networks:
+      mynet:
+        ipv4_address: "172.19.0.20"
+    ports:
+    - 9000:9000
+    volumes:
+    - /data/portainer:/data
+    - /var/run/docker.sock:/var/run/docker.sock 
+    
+networks:
+  mynet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "172.19.0.0/24"
+          gateway: "172.19.0.1"
+
