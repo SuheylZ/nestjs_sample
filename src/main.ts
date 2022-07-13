@@ -1,11 +1,19 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import {SwaggerModule, DocumentBuilder} from '@nestjs/swagger'
-import { ImporterService } from './storage/importer.service';
+import * as dotenv from 'dotenv'
+import * as fs from 'fs'
+
 
 async function bootstrap() {
-
+  // const path = `${__dirname}/.env`
   
+  // if (!fs.existsSync(path))
+  //   throw new Error('No environment file found')
+  
+  // dotenv.config({
+  //   path: path
+  // })
 
   const app = await NestFactory.create(AppModule);
 
