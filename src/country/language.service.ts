@@ -1,46 +1,46 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { ISO639 } from 'src/storage/entities/iso_639.entity';
 import { DataSource, Repository } from 'typeorm';
 
 export type LanguageType = {
-  code2: string
-  language: string
-  native: string
+  code: string
+  code3: string
+  name: string
+  nativeName: string
 }
 
 @Injectable()
-export class LanguageService {
+export class LanguageService{
+  constructor(@InjectRepository(ISO639) private readonly repository: Repository<ISO639>) { }
 
-  private readonly _rep: Repository<ISO639>;
-  constructor(private readonly ds: DataSource) {
-    this._rep = ds.getRepository(ISO639)
+  async exists(lang: string) {
+    const language = await this.one(lang)
+    return !!language
   }
+  
+  async one(lang: string) {
+    const data = await this.repository.findOne({ where: { code2: lang } })
+    if (data)
+      return {
+        code: data?.code2,
+        code3: data?.code3,
+        name: data?.country,
+        nativeName: data?.native,
+      } as LanguageType;
 
-  async get(code: string) {
-    const row = await this._rep.findOne({
-      where: {
-        code2: code
-      }
-    })
-
-    return row
+    return null
   }
   async all() {
-    const rows = await this._rep.find({
-      select: ["code2", "country", "native"],
-      order: {
-        code2: 'ASC'
-      }
-    })
-
-    const languages = rows.map(function (x: ISO639) {
+    const [data, total] = await this.repository.findAndCount()
+    const rows = data.map(x => {
       return {
-        code2: x.code2,
-        language: x.country,
-        native: x.native
-      } as LanguageType         
+        code: x?.code2,
+        code3: x?.code3,
+        name: x?.country,
+        nativeName: x?.native,
+      } as LanguageType;
     })
-    
-    return languages
+    return {rows, total}
   }
 }

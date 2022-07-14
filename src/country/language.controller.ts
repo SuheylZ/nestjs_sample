@@ -1,8 +1,6 @@
-import { Controller, Get, Param, Post, Res, StreamableFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
-import { StreamableFileOptions } from '@nestjs/common/file-stream/streamable-options.interface';
+import { Controller, Get, Param, Post, Query, Res, StreamableFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
-import { AuthGuard } from 'src/auth.guard';
 import { ImporterService } from 'src/storage/importer.service';
 import { Stream } from 'stream';
 import { LanguageService } from './language.service';
@@ -27,19 +25,22 @@ export class LangagesController {
     }
   }
 
-  @Get(':code')
-  async get(@Param('code') code: string) {
-    return await this.languages.get(code)
+  @Get()
+  async get(@Query('lang') code: string) {
+    return await this.languages.one(code)
   }
 
-  @Get('download/:type')
-  async download(@Param('type') type: string, @Res() res: Response) {
+  @Get('download')
+  async download(@Res() res: Response) {
     console.log('download requested')
-    const languages = await this.languages.all()
+    const {rows, total} = await this.languages.all()
 
     const stream = new Stream.Readable()
-    for (const language of languages) {
-      stream.push(`${JSON.stringify(language)}\r\n`)
+    for (const row of rows) {
+      const { code, code3, name, nativeName } = row
+      
+      const sql = `INSERT INTO schema.table(code2, code3, name, native) VALUES ('${code}', '${code3}', '${name.replace("'", "''")}', '${nativeName.replace("'", "''")}')`
+      stream.push(sql)
     }
     stream.push(null)
     return new StreamableFile(stream)
