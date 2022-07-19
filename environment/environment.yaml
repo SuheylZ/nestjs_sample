@@ -1,103 +1,146 @@
 version: "3.1"
 services:
+
   postgres:
+    container_name: postgres
     image: postgres:bullseye
-    volumes:
-      - /data/postgres:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER="admin"
-      - POSTGRES_PASSWORD="password"
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
     networks:
       mynet:
-        ipv4_address: "172.19.0.8"
+        ipv4_address: "172.19.0.10"
     ports:
       - 5432:5432
-
+    volumes:
+      - /data/postgres:/var/lib/postgresql/data
+      
   pdadmin:
+    container_name: pgadmin
+    depends_on: 
+      - postgres
     image: dpage/pgadmin4:6.11
-    networks:
-      mynet:
-        ipv4_address: "172.19.0.9"
-    ports:
-      - 5050:80 
     environment:
       - PGADMIN_DEFAULT_EMAIL=name@example.com
       - PGADMIN_DEFAULT_PASSWORD=admin
-
-
-  zero:
-      image: dgraph/dgraph:v21.03.1
-      volumes:
-        - /data/dgraph/zero:/dgraph
-      networks:
-        mynet:
-          ipv4_address: "172.19.0.10"
-      ports:
-        - 5080:5080
-        - 6080:6080
-      restart: on-failure
-      command: "dgraph zero --my=zero:5080"
-
-  alpha:
-    image: dgraph/dgraph:v21.03.1
-    volumes:
-      - /data/dgraph/alpha:/dgraph
-    networks: 
+    networks:
       mynet:
         ipv4_address: "172.19.0.11"
     ports:
-      - 8080:8080
-      - 9080:9080
+      - 5050:80 
+    volumes:
+      - /data/pgadmin:/var/lib/pgadmin
+
+
+  dgraph_zero:
+      container_name: dgraph_zero
+      image: dgraph/dgraph:v21.03.1
+      restart: on-failure
+      command: "dgraph zero --my=zero:5080"
+      networks:
+        mynet:
+          ipv4_address: "172.19.0.30"
+      ports:
+        - 5080:5080
+        - 6080:6080
+      volumes:
+        - /data/dgraph/zero:/dgraph
+
+  dgraph_alpha:
+    container_name: dgraph_alpha
+    depends_on: 
+      - dgraph_zero
+    image: dgraph/dgraph:v21.03.1
     restart: on-failure
     command: dgraph alpha --my=alpha:7080 --zero=zero:5080 --whitelist 172.19.0.10,172.19.0.12,192.168.1.1
-  
-  ratel:
-    image: dgraph/ratel:latest
     networks: 
       mynet:
-        ipv4_address: "172.19.0.12"
+        ipv4_address: "172.19.0.31"
     ports:
-      - 8000:8000
-    command: dgraph-ratel
+      - 8080:8080
+      - 9080:9080
+    volumes:
+      - /data/dgraph/alpha:/dgraph      
 
-  mongo: 
+  
+  mongo:
+    container_name: mongo 
     image: mongo:focal
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=mongo#123
+    command: mongod --verbose --dbpath=/data/db --fork
     networks: 
       mynet:
-        ipv4_address: "172.19.0.15"
+        ipv4_address: "172.19.0.20"
     ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME="root"
-      - MONGO_INITDB_ROOT_PASSWORD="mongo#123"
-    command: mongod --verbose --dbpath=/data/db
+      - 27017:27017
     volumes:
     - /tmp/data/mongo:/data/db
 
-  mongo-admin:
+  mongo_express:
+    container_name: mongo_express
+    depends_on: 
+      - mongo
     image: mongo-express:0.54.0
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=mongo#123
+      - ME_CONFIG_MONGODB_URL=mongodb://root:mongo#123@mongo:27017
     networks: 
       mynet:
-        ipv4_address: "172.19.0.16"
+        ipv4_address: "172.19.0.21"
     ports:
       - 8081:8081
+
+
+  elasticsearch: 
+    container_name: elasticsearch
+    image: elasticsearch:8.3.2
+    ulimits: 
+      memlock: 
+        hard: -1
+        soft: -1
+      nofile: 
+        hard: 65535
+        soft: 65535
+      nproc: 65535
     environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME="root"
-      - ME_CONFIG_MONGODB_ADMINPASSWORD="mongo#123"
-      - ME_CONFIG_MONGODB_URL="mongodb://root:mongo#123@mongo:27017/"
-
-
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    networks: 
+      mynet: 
+        ipv4_address: "172.19.0.40"
+    ports: 
+      - 9200:9200
+   
+  kibana:
+    container_name: kibana
+    image: kibana:8.3.2
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      mynet:
+        ipv4_address: "172.19.0.41"
+    ports:
+      - 5601:5601
+     
+        
   portainer:
+    container_name: portainer
     image: portainer/portainer-ce:2.13.1
     networks:
       mynet:
-        ipv4_address: "172.19.0.20"
+        ipv4_address: "172.19.0.50"
     ports:
     - 9000:9000
     volumes:
     - /data/portainer:/data
     - /var/run/docker.sock:/var/run/docker.sock 
     
+
 networks:
   mynet:
     driver: bridge
